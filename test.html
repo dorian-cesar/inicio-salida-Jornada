@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Jornada</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            width: 375px;
+        }
+        button {
+            width: 100%;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">Control de Jornada</h2>
+        <form id="controlJornadaForm" class="mt-4">
+            <div class="form-group">
+                <label for="rut">RUT</label>
+                <input type="text" class="form-control" id="rut" placeholder="Ingrese su RUT" required>
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn btn-success" id="btnEntrada">Entrada</button>
+                <button type="button" class="btn btn-danger" id="btnSalida">Salida</button>
+            </div>
+        </form>
+        <div class="mt-4" id="registro">
+            <h4>Registros</h4>
+            <ul class="list-group" id="registroList">
+                <!-- Aquí se agregarán los registros -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel">Confirmación</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="confirmModalBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="confirmButton">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#btnEntrada').click(function() {
+                registrar('entrada');
+            });
+
+            $('#btnSalida').click(function() {
+                registrar('salida');
+            });
+
+            function registrar(tipo) {
+                const rut = $('#rut').val().trim();
+                if (rut === '') {
+                    alert('Por favor, ingrese su RUT.');
+                    return;
+                }
+
+                $.post('http://localhost/inicio-salida-jornada/php/api.php', { rut: rut, tipo: tipo }, function(response) {
+                    const data = JSON.parse(response);
+                    if (data.error) {
+                        alert(data.error);
+                    } else if (data.consecutive) {
+                        $('#confirmModalBody').text(data.message);
+                        $('#confirmModal').data('rut', rut).data('tipo', tipo).modal('show');
+                    } else {
+                        const timestamp = new Date().toLocaleString();
+                        const metodo = 'manual';
+                        const registroItem = `<li class="list-group-item">${tipo.toUpperCase()}: ${rut} a las ${timestamp} (${metodo})</li>`;
+                        $('#registroList').append(registroItem);
+                        $('#rut').val('');
+                    }
+                });
+            }
+
+            $('#confirmButton').click(function() {
+                const rut = $('#confirmModal').data('rut');
+                const tipo = $('#confirmModal').data('tipo');
+
+                $.post('http://localhost/inicio-salida-jornada/php/api.php', { rut: rut, tipo: tipo, force: true }, function(response) {
+                    const data = JSON.parse(response);
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        const timestamp = new Date().toLocaleString();
+                        const metodoForzado = 'forzado';
+                        const metodoManual = 'manual';
+
+                        // Añadir el registro forzado anterior
+                        if (data.missingTipo) {
+                            const registroForzadoItem = `<li class="list-group-item">${data.missingTipo.toUpperCase()}: ${rut} a las ${timestamp} (${metodoForzado})</li>`;
+                            $('#registroList').append(registroForzadoItem);
+                        }
+
+                        // Añadir el registro actual como manual
+                        const registroManualItem = `<li class="list-group-item">${tipo.toUpperCase()}: ${rut} a las ${timestamp} (${metodoManual})</li>`;
+                        $('#registroList').append(registroManualItem);
+
+                        $('#rut').val('');
+                        $('#confirmModal').modal('hide');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

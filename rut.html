@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Jornada</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            width: 375px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 5px;
+
+        }
+
+        .btn-hidden {
+            display: none;
+        }
+
+        #ingreso {
+            height: 100px;
+            background: url('/assets/img/bus2.JPG') no-repeat center center;
+            background-size: cover;
+            opacity: 1;
+            /* Transp. de la imagen */
+            z-index: -1;
+            /* Colocar detrás del contenido */
+            border-radius: 8px;
+            /* Para coincidir con los bordes del formulario */
+            padding-bottom: 20px;
+            color: rgb(0, 0, 0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <img src="./assets/img/Logo.svg" alt="">
+        
+        <form id="controlJornadaForm" class="mt-4">
+            <div id="ingreso">
+                <h2 class="text-center">Control de Jornada</h2>
+                <div class="form-group">
+                    <label for="rut">RUT</label>
+                    <input type="text" class="form-control" id="rut" placeholder="Ingrese su RUT" required>
+                </div>
+            </div>
+            <div class="mt-4" id="registro">
+                <h4>Registros</h4>
+                <ul class="list-group" id="registroList">
+                    <!-- Aquí se agregarán los registros -->
+                </ul>
+            </div>
+            <div class="text-center btn-container">
+                <button type="button" class="btn btn-primary btn-hidden mt-5" id="btnEntrada">Entrada</button>
+                <button type="button" class="btn btn-danger btn-hidden" id="btnSalida">Salida</button>
+            </div>
+        </form>
+        
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Mostrar los botones con animación
+            $('#btnEntrada').fadeIn(1000, function () {
+                $('#btnSalida').fadeIn(1000);
+            });
+
+            $('#btnEntrada').click(function () {
+                registrar('entrada');
+            });
+
+            $('#btnSalida').click(function () {
+                registrar('salida');
+            });
+
+            function registrar(tipo) {
+                const rut = $('#rut').val().trim();
+                if (rut === '') {
+                    alert('Por favor, ingrese su RUT.');
+                    return;
+                }
+
+                const timestamp = new Date().toLocaleString();
+                const registroItem = `<li class="list-group-item">${tipo.toUpperCase()}: ${rut} a las ${timestamp}</li>`;
+                $('#registroList').append(registroItem);
+
+                $('#rut').val('');
+            }
+        });
+    </script>
+</body>
+
+</html>
