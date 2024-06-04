@@ -1,12 +1,12 @@
 <?php
 // Permitir solicitudes desde cualquier origen
-header("Access-Control-Allow-Origin: *");
+//header("Access-Control-Allow-Origin: *");
 
 // Permitir los métodos de solicitud que se utilizarán
-header("Access-Control-Allow-Methods: POST, OPTIONS");
+//header("Access-Control-Allow-Methods: POST, OPTIONS");
 
 // Permitir ciertos encabezados en las solicitudes preflight OPTIONS, incluido Content-Type
-header("Access-Control-Allow-Headers: Content-Type");
+//header("Access-Control-Allow-Headers: Content-Type");
 
 $servername = "ls-8ce02ad0b7ea586d393e375c25caa3488acb80a5.cylsiewx0zgx.us-east-1.rds.amazonaws.com";
 $username = "dbmasteruser";
@@ -62,6 +62,7 @@ function checkRestrictions($rut, $tipo, $conn) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $rut = $_POST['rut'];
     $tipo = $_POST['tipo'];
+    $pat = $_POST['pat'];
     $force = isset($_POST['force']) ? $_POST['force'] : false;
 
     // Verificar restricciones
@@ -70,9 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (isset($error['consecutive']) && $force) {
             // Registrar la entrada o salida faltante
             $missingTipo = $error['missingTipo'];
-            $sql = "INSERT INTO registros (rut, tipo, timestamp, metodo) VALUES (?, ?, NOW() - INTERVAL 1 SECOND, 'forzado')";
+            $sql = "INSERT INTO registros (rut, tipo, timestamp, metodo,patente) VALUES (?, ?, NOW() - INTERVAL 1 SECOND, 'forzado',?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ss", $rut, $missingTipo);
+            $stmt->bind_param("sss", $rut, $missingTipo,$pat);
             $stmt->execute();
             $stmt->close();
         } else {
@@ -84,9 +85,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Insertar el registro actual
     $metodo = 'manual';
-    $sql = "INSERT INTO registros (rut, tipo, timestamp, metodo) VALUES (?, ?, NOW(), ?)";
+    $sql = "INSERT INTO registros (rut, tipo, timestamp, metodo) VALUES (?, ?, NOW(), ?,?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sss", $rut, $tipo, $metodo);
+    $stmt->bind_param("ssss", $rut, $tipo, $metodo,$pat);
     if ($stmt->execute()) {
         echo json_encode(["success" => "Registro añadido correctamente."]);
     } else {
