@@ -13,7 +13,6 @@ $username = "dbmasteruser";
 $password = ':&T``E~r:r!$1c6d:m143lzzvGJ$NuP;';
 $dbname = "interurbano";
 
-
 // Crear conexión
 $conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -71,9 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (isset($error['consecutive']) && $force) {
             // Registrar la entrada o salida faltante
             $missingTipo = $error['missingTipo'];
-            $sql = "INSERT INTO registros (rut, tipo, timestamp, metodo,patente) VALUES (?, ?, NOW() - INTERVAL 1 SECOND, 'forzado',?)";
+            $sql = "INSERT INTO registros (rut, tipo, timestamp, metodo, patente) VALUES (?, ?, NOW() - INTERVAL 1 SECOND, 'forzado', ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $rut, $missingTipo,$pat);
+            $stmt->bind_param("sss", $rut, $missingTipo, $pat);
             $stmt->execute();
             $stmt->close();
         } else {
@@ -85,9 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Insertar el registro actual
     $metodo = 'manual';
-    $sql = "INSERT INTO registros (rut, tipo, timestamp, metodo) VALUES (?, ?, NOW(), ?,?)";
+    $sql = "INSERT INTO registros (rut, tipo, timestamp, metodo, patente) VALUES (?, ?, NOW(), ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssss", $rut, $tipo, $metodo,$pat);
+    $stmt->bind_param("ssss", $rut, $tipo, $metodo, $pat);
     if ($stmt->execute()) {
         echo json_encode(["success" => "Registro añadido correctamente."]);
     } else {
